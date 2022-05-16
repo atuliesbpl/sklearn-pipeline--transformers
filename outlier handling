@@ -1,0 +1,48 @@
+# Transformer for outlier handling 
+
+from sklearn.pipeline import TransformerMixin
+from sklearn.neighbors import LocalOutlierFactor
+
+class OutlierExtractor(TransformerMixin):
+    def __init__(self, threshold=3):
+        """
+        Create a transformer to remove outliers. A threshold is set for selection
+        criteria, and further arguments are passed to the LocalOutlierFactor class
+        Keyword Args:
+            neg_conf_val (float): The threshold for excluding samples with a lower
+               negative outlier factor.
+        Returns:
+            object: to be used as a transformer method as part of Pipeline()
+        """
+        self.threshold = threshold
+        
+    def fit(self, X, y=None):
+        return self
+
+    def transform(self, X, y=None):
+        """
+        Uses LocalOutlierFactor class to subselect data based on some threshold
+        Returns:
+            ndarray: subsampled data
+        Notes:
+            X should be of shape (n_samples, n_features)
+        """
+        import pandas as pd
+        import numpy as np
+        numeric_features = X.select_dtypes(include=np.number).columns.tolist()
+        outlier_dict = dict()
+        for col in numeric_features:
+            q25, q75 = np.percentile(X[col], 25), np.percentile(X[col], 75)
+            iqr = q75 - q25
+            cut_off = iqr * 1.5
+            lower, upper = q25 - cut_off, q75 + cut_off
+            outlier_index = X.loc[(X[col] < lower) | (X[col] > upper), col].index.values
+            if len(outlier_index) > 0:
+                outlier_dict.update({col:len(outlier_index)})
+            X.drop(X[(X[col] > upper) | (X[col] < lower) ].index , inplace=True)
+        print('Outlier dictionary :', outlier_dict)
+        return X
+
+    def fit_transform(self, X, y=None, **fit_params):
+        _ = self.fit(X=X, y=y)
+        return self.transform(X=X, y=y)
