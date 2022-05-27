@@ -113,7 +113,7 @@ class TextCleaner(BaseEstimator, TransformerMixin):
             Transformed data frame
         """
         for col in self.text_features:
-            X['Clean_'+ col] = X[col].apply(clean_text)
+            X[col] = X[col].apply(clean_text)
         X.drop(self.text_features, axis=1)
         return X
 
