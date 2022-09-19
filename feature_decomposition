@@ -1,0 +1,110 @@
+# feature decomposition
+import pandas as pd
+from sklearn.base import TransformerMixin, BaseEstimator
+from sklearn.decomposition import PCA
+from sklearn.exceptions import NotFittedError
+
+def get_feature_decomposer(method="none",
+                           n_components=2
+                           ):
+    """
+    Decompose features by specified method.
+    Parameters
+    ------
+    method: str
+        method name
+    n_components: int
+        number of components post decomposition
+    Returns
+    ------
+    decomposer: sklearn decomposer transformer
+        decomposer
+    """
+    # creating method as key for custom decompositions
+    if method == 'none':
+        return None
+    elif method == 'pca':
+        decomposer = PCA(n_components=n_components, random_state=0)
+           
+    return decomposer
+
+class FeatureDecomposition(BaseEstimator, TransformerMixin):
+
+    def __init__(self, method, n_components):
+        self.method = method
+        self.n_components = n_components
+        
+    def fit(self, X, y=None):
+        """
+            fits data frame column wise
+            Parameters
+            -----------
+            X: pd.DataFrame
+                input data frame
+            y: pd.Series
+                input series
+            Returns
+            ------
+                class instance
+
+            Exceptions
+            ------
+                Raises exception if fails to fit
+        """
+        
+        if self.method == 'pca':
+            self.decomp = PCA(n_components=self.n_components, random_state=0)
+        self.decomp.fit(X)
+
+        return self
+
+    def transform(self, X, y=None):
+        """
+        performs custom decomposition
+        Parameters
+        -----------
+        X: pd.DataFrame
+            input data frame
+        y: pd.Series
+            input series
+        Returns
+        ------
+            custom decomposition transformed data frame
+        Exceptions
+        ------
+            Raises exception if fails to do the custom PCA
+        """
+        if len(X) == 0:
+            raise NotFittedError(
+                """This FeatureDecomposition instance is not fitted yet.
+        Call 'fit' with appropriate arguments before using this estimator.""")
+        
+
+        df_new = self.decomp.transform(X)
+#         self.components_ = self.decomp.components_
+        index_list = ['pca_' + str(ind) for ind in range(self.decomp.get_params()['n_components'])]
+
+        X = pd.DataFrame(df_new, columns=index_list)
+        return X
+    
+    def fit_transform(self, X, y=None, **fit_params):
+        """
+        fits and transforms data frame
+        Parameters
+        -----------
+        X: pd.DataFrame
+            input data frame
+        y: pd.Series
+            input series
+        fit_params: dict
+            fit params
+        Returns
+        ------
+            custom decomposed data frame
+
+        Exceptions
+        ------
+            Raises exception if fails to do the custom decomposition
+        """
+        _ = self.fit(X=X, y=y)
+        return self.transform(X=X, y=y)
