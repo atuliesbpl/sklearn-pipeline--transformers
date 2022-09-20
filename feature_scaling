@@ -1,5 +1,9 @@
 # Feature Scaling
 # -*- coding: utf-8 -*-
+"""
+created on Thu Sep 16 10:30:43 2022
+Author: Atul Singh
+"""
 
 import pandas as pd
 import numpy as np
@@ -25,6 +29,24 @@ class FeatureScaling(BaseEstimator, TransformerMixin):
         -------
         self
         """
+        self.list_of_feature_names =  list(X)
+        
+        if self.method == 'normalizer':
+            from sklearn.preprocessing import Normalizer
+            self.transformer  = Normalizer().fit(X)
+            
+        elif self.method == 'minMaxScaler':
+            from sklearn.preprocessing import MinMaxScaler
+            self.transformer  = MinMaxScaler().fit(X)
+
+        elif self.method == 'robustScaler':
+            from sklearn.preprocessing import RobustScaler
+            self.transformer  = RobustScaler().fit(X)
+
+        else:
+            from sklearn.preprocessing import StandardScaler
+            self.transformer  = StandardScaler().fit(X)
+
         return self
 
     def transform(self, X, y=None):
@@ -48,31 +70,9 @@ class FeatureScaling(BaseEstimator, TransformerMixin):
         else:
             pass
 
-        list_of_feature_names =  list(X)
-        if self.method == 'normalizer':
-            from sklearn.preprocessing import Normalizer
-            transformer  = Normalizer().fit(X)
-            X_scaled = transformer.transform(X)
-            X = pd.DataFrame(X_scaled, columns = list_of_feature_names)
-            
-        elif self.method == 'minMaxScaler':
-            from sklearn.preprocessing import MinMaxScaler
-            transformer  = MinMaxScaler().fit(X)
-            X_scaled = transformer.transform(X)
-            X = pd.DataFrame(X_scaled, columns = list_of_feature_names)
-            
-        elif self.method == 'robustScaler':
-            from sklearn.preprocessing import RobustScaler
-            transformer  = RobustScaler().fit(X)
-            X_scaled = transformer.transform(X)
-            X = pd.DataFrame(X_scaled, columns = list_of_feature_names)
-            
-        else:
-            from sklearn.preprocessing import StandardScaler
-            transformer  = StandardScaler().fit(X)
-            X_scaled = transformer.transform(X)
-            X = pd.DataFrame(X_scaled, columns = list_of_feature_names)
-            
+        X_scaled = self.transformer.transform(X)
+        X = pd.DataFrame(X_scaled, columns = self.list_of_feature_names)
+
         return X
 
     def fit_transform(self, X, y=None, **fit_params):
